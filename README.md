@@ -1,7 +1,7 @@
 ## EP de Redes
 
 **Discentes**
-Mario Concilio - 
+Mario Concilio - <numero usp>
 Richard Santana - 7137541
 
 ## Para gerar o executável do projeto:
