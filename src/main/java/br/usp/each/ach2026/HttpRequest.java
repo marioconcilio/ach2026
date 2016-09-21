@@ -8,7 +8,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.StringTokenizer;
+
+import org.apache.commons.io.IOUtils;
 
 public class HttpRequest implements Runnable {
 
@@ -24,7 +31,7 @@ public class HttpRequest implements Runnable {
 			processRequest();
 		}
 		catch (Exception ex) {
-			ex.printStackTrace();
+//			ex.printStackTrace();
 		}
 	}
 
@@ -73,11 +80,14 @@ public class HttpRequest implements Runnable {
 		String statusLine = null;
 		String contentTypeLine = null;
 		String entityBody = null;
+		int statusCode;
 		if (fileExists) {
+			statusCode = 200;
 			statusLine = "HTTP/1.0 200 OK" + CRLF;
 			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
 		}
 		else {
+			statusCode = 404;
 			statusLine = "HTTP/1.0 404 Not Found" + CRLF;
 			contentTypeLine = "Content-type: text/html" + CRLF;
 			entityBody = "<html>" + "<head><title>Not Found</title></head>" + "<body>"
@@ -96,11 +106,14 @@ public class HttpRequest implements Runnable {
 		os.writeBytes(CRLF);
 
 		// enviar o corpo da entidade
+		int bytes;
 		if (fileExists) {
+			bytes = IOUtils.toByteArray(fis).length;
 			sendBytes(fis, os);
 			fis.close();
 		}
 		else {
+			bytes = entityBody.getBytes("UTF-8").length;
 			os.writeBytes(entityBody);
 		}
 
@@ -108,6 +121,12 @@ public class HttpRequest implements Runnable {
 		os.close();
 		br.close();
 		socket.close();
+		
+		int port = socket.getLocalPort();
+		String address = socket.getInetAddress().getHostAddress();
+		ZonedDateTime timestamp = ZonedDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z");
+		System.out.printf("%s:%d - [%s] \"%s\" %d %d\n", address, port, timestamp.format(formatter), requestLine, statusCode, bytes);
 	}
 
 	private static void sendBytes(FileInputStream fis, OutputStream os) throws Exception {
