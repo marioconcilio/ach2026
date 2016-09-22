@@ -2,12 +2,15 @@ package br.usp.each.ach2026;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -77,23 +80,29 @@ public class HttpRequest implements Runnable {
 		}
 
 		// construir a mensagem de resposta
+		int statusCode;
 		String statusLine = null;
 		String contentTypeLine = null;
 		String entityBody = null;
-		int statusCode;
+		
 		if (fileExists) {
 			statusCode = 200;
 			statusLine = "HTTP/1.0 200 OK" + CRLF;
 			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
 		}
 		else {
-			statusCode = 404;
-			statusLine = "HTTP/1.0 404 Not Found" + CRLF;
-			contentTypeLine = "Content-type: text/html" + CRLF;
-			entityBody = "<html>" + "<head><title>Not Found</title></head>" + "<body>"
-					+ "<h1>Not Found</h1>" + "<p>The requested URL "
-					+ fileName.substring(1) + " was not found on this server.</p>"
-					+ "</body></html>";
+			if (new File(fileName).isDirectory()) {
+				statusCode = 200;
+				statusLine = "HTTP/1.0 200 OK" + CRLF;
+				contentTypeLine = "Content-type: text/html" + CRLF;
+				entityBody = HtmlGenerator.listDirectoryContent(fileName);
+			}
+			else {
+				statusCode = 404;
+				statusLine = "HTTP/1.0 404 Not Found" + CRLF;
+				contentTypeLine = "Content-type: text/html" + CRLF;
+				entityBody = HtmlGenerator.fileNotFound(fileName);
+			}
 		}
 
 		// enviar a linha de status
