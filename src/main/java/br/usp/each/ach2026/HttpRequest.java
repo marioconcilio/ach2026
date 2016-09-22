@@ -9,20 +9,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.StringTokenizer;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 
 public class HttpRequest implements Runnable {
 
-	final static String CRLF = "\r\n";
+	private final static Logger logger = Logger.getLogger(HttpRequest.class);
+	private final static String CRLF = "\r\n";
 	private Socket socket;
 
 	public HttpRequest(Socket socket) throws Exception {
@@ -51,13 +48,13 @@ public class HttpRequest implements Runnable {
 		String requestLine = br.readLine();
 
 		// exibir a linha de requisicao
-		System.out.println();
-		System.out.println(requestLine);
+//		System.out.println();
+//		System.out.println(requestLine);
 
 		// obter e exibir as linhas de cabecalho
 		String headerLine = null;
 		while ((headerLine = br.readLine()).length() != 0) {
-			System.out.println(headerLine);
+//			System.out.println(headerLine);
 		}
 
 		// extrair o nome do arquivo a linha de requisicao
@@ -135,7 +132,10 @@ public class HttpRequest implements Runnable {
 		String address = socket.getInetAddress().getHostAddress();
 		ZonedDateTime timestamp = ZonedDateTime.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z");
-		System.out.printf("%s:%d - [%s] \"%s\" %d %d\n", address, port, timestamp.format(formatter), requestLine, statusCode, bytes);
+//		System.out.printf("%s:%d - [%s] \"%s\" %d %d\n", address, port, timestamp.format(formatter), requestLine, statusCode, bytes);
+		
+//		logger.info("{}:{} \"{}\" {} {}", address, port, requestLine, statusCode, bytes);
+		logger.info(String.format("%s:%d \"%s\" %d %d\n", address, port, requestLine, statusCode, bytes));
 	}
 
 	private static void sendBytes(FileInputStream fis, OutputStream os) throws Exception {

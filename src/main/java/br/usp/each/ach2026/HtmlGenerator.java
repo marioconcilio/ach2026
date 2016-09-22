@@ -22,7 +22,7 @@ public class HtmlGenerator {
 						),
 				body().with(
 						h1("Not Found"),
-						p("The requested URL " + fileName.substring(1)+" was not found on this server.")
+						p("The requested URL " + fileName.substring(1) + " was not found on this server.")
 						)
 				).render();
 	}
@@ -31,8 +31,7 @@ public class HtmlGenerator {
 		return html().with(
 				head().with(
 						title("Index of " + dir.substring(1)),
-						style().withText("table {width: 50%}")
-						.withText("td.centered {text-align: center}")
+						style().withText("table{width: 70%} th,td{padding: 5px} td.centered{text-align: center}")
 						),
 				body().with(
 						h1("Index of " + dir.substring(1)),
@@ -48,11 +47,11 @@ public class HtmlGenerator {
 	}
 	
 	private static List<Tag> createPathList(String dir) throws Exception {
-		return Files.list(Paths.get(dir))
-				.map(path ->
+		return Files.list(Paths.get(dir)).sorted().map(path ->
 				tr().with(
 						td().with(
-								a(path.getFileName().toString()).withHref(path.toString())
+								a(path.toFile().isDirectory()? path.getFileName().toString() + "/" :
+									path.getFileName().toString()).withHref(path.toString().substring(1))
 								),
 						td(sdf.format(path.toFile().lastModified())).withClass("centered"),
 						td(path.toFile().isDirectory()? "-" : 
