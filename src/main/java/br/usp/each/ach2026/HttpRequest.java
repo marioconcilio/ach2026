@@ -2,12 +2,12 @@ package br.usp.each.ach2026;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+
+import br.usp.each.ach2026.PropertiesManager.ListingDirectories;
 import sun.misc.BASE64Encoder;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.StringTokenizer;
 
 public class HttpRequest implements Runnable {
@@ -15,6 +15,7 @@ public class HttpRequest implements Runnable {
     private final static Logger logger = Logger.getLogger(HttpRequest.class);
     private final static String CRLF = "\r\n";
     private final Socket socket;
+    private ListingDirectories listing;
 
     public HttpRequest(final Socket socket) throws Exception {
         this.socket = socket;
@@ -40,9 +41,6 @@ public class HttpRequest implements Runnable {
         // obter a linha de requisicao da mensagem de requisicao http
         final String requestLine = br.readLine();
 
-        // exibir a linha de requisicao
-//		System.out.println();
-//		System.out.println(requestLine);
         boolean logged = false;
         // obter e exibir as linhas de cabecalho
         String headerLine = null;
@@ -54,7 +52,7 @@ public class HttpRequest implements Runnable {
                     logged = true;
                 }
             }
-//			System.out.println(headerLine);
+
         }
 
         // extrair o nome do arquivo a linha de requisicao
@@ -76,12 +74,12 @@ public class HttpRequest implements Runnable {
         }
 
         // construir a mensagem de resposta
-        final int statusCode;
+        int statusCode = 0;
         String statusLine = null;
         String contentTypeLine = null;
         String entityBody = null;
 
-        if (requestLine.startsWith("/restrito") && !logged) {
+        if (requestLine.startsWith("GET /restrito") && !logged) {
             statusCode = 401;
             statusLine = "HTTP/1.0 401 Unauthorized" + CRLF;
             contentTypeLine = "Content-type: text/html" + CRLF;
@@ -91,11 +89,29 @@ public class HttpRequest implements Runnable {
             statusLine = "HTTP/1.0 200 OK" + CRLF;
             contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
         } else {
+        	// se a requisicao for um diretorio
             if (new File(fileName).isDirectory()) {
-                statusCode = 200;
-                statusLine = "HTTP/1.0 200 OK" + CRLF;
-                contentTypeLine = "Content-type: text/html" + CRLF;
-                entityBody = HtmlGenerator.listDirectoryContent(fileName);
+            	
+            	// confere comportamento de acordo com config.properties
+            	switch (this.listing) {
+            		case ALLOWED:
+            			statusCode = 200;
+            			statusLine = "HTTP/1.0 200 OK" + CRLF;
+            			contentTypeLine = "Content-type: text/html" + CRLF;
+            			entityBody = HtmlGenerator.listDirectoryContent(fileName);
+            			break;
+            		
+            		case DENIED:
+            			statusCode = 401;
+            			statusLine = "HTTP/1.0 401 Unauthorized" + CRLF;
+            			contentTypeLine = "Content-type: text/html" + CRLF;
+            			entityBody = HtmlGenerator.unauthorized(fileName);
+            			break;
+            			
+            		default:
+            			System.out.println("getting index");
+            			return;
+            	}
             } else {
                 statusCode = 404;
                 statusLine = "HTTP/1.0 404 Not Found" + CRLF;
@@ -129,13 +145,9 @@ public class HttpRequest implements Runnable {
         br.close();
         this.socket.close();
 
+        // escrevendo log
         final int port = this.socket.getLocalPort();
         final String address = this.socket.getInetAddress().getHostAddress();
-        final ZonedDateTime timestamp = ZonedDateTime.now();
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z");
-//		System.out.printf("%s:%d - [%s] \"%s\" %d %d\n", address, port, timestamp.format(formatter), requestLine, statusCode, bytes);
-
-//		logger.info("{}:{} \"{}\" {} {}", address, port, requestLine, statusCode, bytes);
         logger.info(String.format("%s:%d \"%s\" %d %d\n", address, port, requestLine, statusCode, bytes));
     }
 
@@ -166,5 +178,9 @@ public class HttpRequest implements Runnable {
             contentType = "image/jpeg";
 
         return contentType;
+    }
+    
+    public void setListingDirectories(ListingDirectories listing) {
+    	this.listing = listing;
     }
 }
