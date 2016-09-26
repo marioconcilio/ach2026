@@ -1,6 +1,6 @@
 package br.usp.each.ach2026;
 
-import static j2html.TagCreator.*;
+import j2html.tags.Tag;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -9,13 +9,25 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import j2html.tags.Tag;
+import static j2html.TagCreator.*;
 
 public class HtmlGenerator {
 	
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("dd/MMM/yyyy HH:mm");
-	
-	public static String fileNotFound(String fileName) {
+
+	public static String unauthorized(final String fileName) {
+		return html().with(
+				head().with(
+						title("Unauthorized")
+				),
+				body().with(
+						h1("Unauthorized"),
+						p("Access to the requested URL " + fileName.substring(1) + " is Restrict.")
+				)
+		).render();
+	}
+
+	public static String fileNotFound(final String fileName) {
 		return html().with(
 				head().with(
 						title("Not Found")
@@ -27,7 +39,7 @@ public class HtmlGenerator {
 				).render();
 	}
 
-	public static String listDirectoryContent(String dir) throws Exception {
+	public static String listDirectoryContent(final String dir) throws Exception {
 		return html().with(
 				head().with(
 						title("Index of " + dir.substring(1)),
@@ -45,8 +57,8 @@ public class HtmlGenerator {
 						)
 				).render();
 	}
-	
-	private static List<Tag> createPathList(String dir) throws Exception {
+
+	private static List<Tag> createPathList(final String dir) throws Exception {
 		return Files.list(Paths.get(dir)).sorted().map(path ->
 				tr().with(
 						td().with(
@@ -58,13 +70,13 @@ public class HtmlGenerator {
 							readableFileSize(path.toFile().length())).withClass("centered"))
 						).collect(Collectors.toList());
 	}
-	
-	public static String readableFileSize(long size) {
-	    if(size <= 0) return "0";
-	    
-	    final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
-	    int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
-	    
-	    return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+
+	public static String readableFileSize(final long size) {
+		if (size <= 0) return "0";
+
+		final String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
+		final int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+
+		return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
 	}
 }
