@@ -1,4 +1,5 @@
 ## EP de Redes
+[![Build Status](https://travis-ci.org/marioconcilio/ach2026.svg?branch=master)](https://travis-ci.org/marioconcilio/ach2026)
 
 **Discentes**
 Mario Concilio - 7578842
