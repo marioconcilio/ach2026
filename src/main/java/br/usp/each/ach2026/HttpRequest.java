@@ -1,9 +1,10 @@
 package br.usp.each.ach2026;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import br.usp.each.ach2026.PropertiesManager.ListingDirectories;
+import br.usp.each.ach2026.response.HttpResponse;
+import br.usp.each.ach2026.response.HttpResponseFactory;
 import sun.misc.BASE64Encoder;
 
 import java.io.*;
@@ -13,7 +14,6 @@ import java.util.StringTokenizer;
 public class HttpRequest implements Runnable {
 
     private final static Logger logger = Logger.getLogger(HttpRequest.class);
-    private final static String CRLF = "\r\n";
     private final Socket socket;
     private ListingDirectories listing;
 
@@ -63,88 +63,19 @@ public class HttpRequest implements Runnable {
         // acrescente um '.' de modo que a requisicao do arquivo
         // esteja dentro do diretorio atual
         fileName = "." + fileName;
-
-        // abrir o arquivo requisitado
-        FileInputStream fis = null;
-        boolean fileExists = true;
-        try {
-            fis = new FileInputStream(fileName);
-        } catch (final FileNotFoundException ex) {
-            fileExists = false;
-        }
-
-        // construir a mensagem de resposta
-        int statusCode = 0;
-        String statusLine = null;
-        String contentTypeLine = null;
-        String entityBody = null;
-
-        if (requestLine.startsWith("GET /restrito") && !logged) {
-            statusCode = 401;
-            statusLine = "HTTP/1.0 401 Unauthorized" + CRLF;
-            contentTypeLine = "Content-type: text/html" + CRLF;
-            entityBody = HtmlGenerator.unauthorized(fileName);
-        } else if (fileExists) {
-            statusCode = 200;
-            statusLine = "HTTP/1.0 200 OK" + CRLF;
-            contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
-        } else {
-        	// se a requisicao for um diretorio
-            if (new File(fileName).isDirectory()) {
-            	
-            	// confere comportamento de acordo com config.properties
-            	switch (this.listing) {
-            		case ALLOWED:
-            			statusCode = 200;
-            			statusLine = "HTTP/1.0 200 OK" + CRLF;
-            			contentTypeLine = "Content-type: text/html" + CRLF;
-            			entityBody = HtmlGenerator.listDirectoryContent(fileName);
-            			break;
-            		
-            		case DENIED:
-            			statusCode = 401;
-            			statusLine = "HTTP/1.0 401 Unauthorized" + CRLF;
-            			contentTypeLine = "Content-type: text/html" + CRLF;
-            			entityBody = HtmlGenerator.unauthorized(fileName);
-            			break;
-            			
-            		default:
-            			System.out.println("getting index");
-            			return;
-            	}
-            } else {
-                statusCode = 404;
-                statusLine = "HTTP/1.0 404 Not Found" + CRLF;
-                contentTypeLine = "Content-type: text/html" + CRLF;
-                entityBody = HtmlGenerator.fileNotFound(fileName);
-            }
-        }
-
-        // enviar a linha de status
-        os.writeBytes(statusLine);
-
-        // enviar a linha de conteudo
-        os.writeBytes(contentTypeLine);
-
-        // fim das linhas de cabecalho
-        os.writeBytes(CRLF);
-
-        // enviar o corpo da entidade
-        final int bytes;
-        if (fileExists) {
-            bytes = IOUtils.toByteArray(fis).length;
-            sendBytes(fis, os);
-            fis.close();
-        } else {
-            bytes = entityBody.getBytes("UTF-8").length;
-            os.writeBytes(entityBody);
-        }
+        
+        HttpResponse response = new HttpResponseFactory().getResponse(fileName, logged, listing);
+        
+        final int bytes = response.getBytes();
+        final int statusCode = response.getStatusCode();
+        response.writeHeader(os);
+        response.writeBody(os);
 
         // fechando cadeias e socket
         os.close();
         br.close();
         this.socket.close();
-
+        
         // escrevendo log
         final int port = this.socket.getLocalPort();
         final String address = this.socket.getInetAddress().getHostAddress();
@@ -153,31 +84,6 @@ public class HttpRequest implements Runnable {
 
     private String encoded(final String value) {
         return new BASE64Encoder().encode(value.getBytes());
-    }
-
-    private static void sendBytes(final FileInputStream fis, final OutputStream os) throws Exception {
-        // construir um buffer de 1k para comportar os bytes no caminho para o socket
-        final byte[] buffer = new byte[1024];
-        int bytes = 0;
-
-        // copiar o arquivo requisitado dentro da cadeia de saida do socket
-        while ((bytes = fis.read(buffer)) != -1) {
-            os.write(buffer, 0, bytes);
-        }
-    }
-
-    private static String contentType(final String fileName) {
-        String contentType = "application/octet-stream";
-        if (fileName.endsWith(".html") || fileName.endsWith(".htm"))
-            contentType = "text/html";
-
-        if (fileName.endsWith("gif"))
-            contentType = "image/gif";
-
-        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg"))
-            contentType = "image/jpeg";
-
-        return contentType;
     }
     
     public void setListingDirectories(ListingDirectories listing) {
