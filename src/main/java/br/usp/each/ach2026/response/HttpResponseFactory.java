@@ -8,10 +8,11 @@ import br.usp.each.ach2026.PropertiesManager.ListingDirectories;
 
 public class HttpResponseFactory {
 	
+	private FileInputStream fis = null;
+	private boolean fileExists = true;
+	
 	public HttpResponse getResponse(String filename, boolean logged, ListingDirectories listing) throws Exception {
 		// abrir o arquivo requisitado
-        FileInputStream fis = null;
-        boolean fileExists = true;
         try {
             fis = new FileInputStream(filename);
         } catch (final FileNotFoundException ex) {
