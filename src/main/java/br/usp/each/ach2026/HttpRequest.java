@@ -66,7 +66,7 @@ public class HttpRequest implements Runnable {
         
         HttpResponse response = new HttpResponseFactory().getResponse(fileName, logged, listing);
         
-        final int bytes = response.getBytes();
+        final long bytes = response.getBytes();
         final int statusCode = response.getStatusCode();
         response.writeHeader(os);
         response.writeBody(os);

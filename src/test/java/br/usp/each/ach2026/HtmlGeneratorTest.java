@@ -31,13 +31,27 @@ public class HtmlGeneratorTest {
 	}
 
 	@Test
-	public void testListDirectoryContent() {
-		fail("Not yet implemented");
-	}
-
-	@Test
 	public void testReadableFileSize() {
-		fail("Not yet implemented");
+		// given
+		final long size1 = 900L;
+		final long size2 = 1024L;
+		final long size3 = 2048L;
+		final long size4 = 2220L;
+		final long size5 = 1048576L;
+		
+		// when
+		String bytes = HtmlGenerator.readableFileSize(size1);
+		String kilo = HtmlGenerator.readableFileSize(size2);
+		String kilo2 = HtmlGenerator.readableFileSize(size3);
+		String kilo2_2 = HtmlGenerator.readableFileSize(size4);
+		String mega = HtmlGenerator.readableFileSize(size5);
+		
+		// then
+		assertEquals("900 B", bytes);
+		assertEquals("1 kB", kilo);
+		assertEquals("2 kB", kilo2);
+		assertEquals("2.2 kB", kilo2_2);
+		assertEquals("1 MB", mega);
 	}
 
 }

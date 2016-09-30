@@ -5,13 +5,13 @@ import java.io.FileInputStream;
 
 public abstract class HttpResponse {
 	
-	protected final static String CRLF = "\r\n";
+	public final static String CRLF = "\r\n";
 	protected String filename;
 	protected boolean fileExists;
 	protected FileInputStream fis = null;
 	
 	public abstract int getStatusCode();
-	public abstract int getBytes() throws Exception;
+	public abstract long getBytes() throws Exception;
 	public abstract void writeHeader(final DataOutputStream os) throws Exception;
 	public abstract void writeBody(final DataOutputStream os) throws Exception;
 	

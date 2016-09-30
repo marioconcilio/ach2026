@@ -8,10 +8,10 @@ import br.usp.each.ach2026.PropertiesManager.ListingDirectories;
 
 public class HttpResponseFactory {
 	
-	private FileInputStream fis = null;
-	private boolean fileExists = true;
-	
 	public HttpResponse getResponse(String filename, boolean logged, ListingDirectories listing) throws Exception {
+		FileInputStream fis = null;
+		boolean fileExists = true;
+		
 		// abrir o arquivo requisitado
         try {
             fis = new FileInputStream(filename);
@@ -20,7 +20,7 @@ public class HttpResponseFactory {
         }
         
         HttpResponse response = null;
-        if (filename.startsWith("./restrito") && !logged) {
+        if (filename.contains("restrito") && !logged) {
         	response = new HttpResponseUnauthorized(filename);
         }
         else if (fileExists) {

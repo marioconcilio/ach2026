@@ -19,7 +19,7 @@ public class HttpResponseOkDirectory extends HttpResponse {
 	}
 
 	@Override
-	public int getBytes() throws Exception {
+	public long getBytes() throws Exception {
 		return body.getBytes("UTF-8").length;
 	}
 

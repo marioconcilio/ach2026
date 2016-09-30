@@ -16,7 +16,7 @@ public class HttpResponseOkFile extends HttpResponse {
 	}
 
 	@Override
-	public int getBytes() throws Exception {
+	public long getBytes() throws Exception {
 		return IOUtils.toByteArray(fis).length;
 	}
 
@@ -32,7 +32,7 @@ public class HttpResponseOkFile extends HttpResponse {
 		// construir um buffer de 1k para comportar os bytes no caminho para o socket
         final byte[] buffer = new byte[1024];
         int bytes = 0;
-
+        
         // copiar o arquivo requisitado dentro da cadeia de saida do socket
         while ((bytes = fis.read(buffer)) != -1) {
             os.write(buffer, 0, bytes);
