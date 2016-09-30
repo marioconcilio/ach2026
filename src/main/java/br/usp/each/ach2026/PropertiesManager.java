@@ -1,8 +1,6 @@
 package br.usp.each.ach2026;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Properties;
 
 public class PropertiesManager {
@@ -13,16 +11,13 @@ public class PropertiesManager {
 	
 	private ListingDirectories listingType;
 	
-	public PropertiesManager() {
+	public PropertiesManager(String filename) {
 		Properties prop = new Properties();
-		InputStream input = null;
 		
-		try {
-			String filename = "config.properties";
-			input = new FileInputStream(filename);
-			
+		try (FileInputStream input = new FileInputStream(filename)) {
 			prop.load(input);
 			String listing = prop.getProperty("listing.directories").toLowerCase();
+			
 			if (listing.equals("allowed")) {
 				this.listingType = ListingDirectories.ALLOWED;
 			}
@@ -36,16 +31,7 @@ public class PropertiesManager {
 		catch (IOException ex) {
 			this.listingType = ListingDirectories.DEFAULT;
 		}
-		finally {
-			if (input != null) {
-				try {
-					input.close();
-				}
-				catch (IOException ex) {
-					ex.printStackTrace();
-				}
-			}
-		}
+
 	}
 	
 	public ListingDirectories getListingType() {
